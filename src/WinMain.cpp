@@ -6,8 +6,12 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define CLIENT_AREA_WIDTH_PX 500
-#define CLIENT_AREA_HEIGHT_PX 255
+#define SPECTRUM_HEIGHT_PX 275
+#define SPECTRUM_BARS_AMOUNT 30
+#define SPECTRUM_BAR_WIDTH_PX 19
+#define SPECTRUM_BARS_DISTANCE_PX 2
+
+#define CLIENT_CONTROLS_HEIGHT_PX 0
 #define SPECTRUM_X 0
 #define SPECTRUM_Y 0
 #define TIMER_INTERVAL 25
@@ -41,13 +45,13 @@ BOOL PlayFile(HWND hWnd)
 	if (!(chan = BASS_StreamCreateFile(FALSE, file, 0, 0, BASS_MUSIC_AUTOFREE))
 		&& !(chan = BASS_MusicLoad(FALSE, file, 0, 0, BASS_MUSIC_RAMP | BASS_MUSIC_AUTOFREE | BASS_MUSIC_PRESCAN, 1))) {
 		ShowError(hWnd, "Can't play file");
-		return FALSE; // Can't load the file
+		return FALSE;
 	}
 
-	/*QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
+	QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
 	double time = BASS_ChannelBytes2Seconds(chan, length);
-	QWORD pos = BASS_ChannelSeconds2Bytes(chan, time - 10);
-	BASS_ChannelSetPosition(chan, pos, BASS_POS_BYTE);*/
+	QWORD pos = BASS_ChannelSeconds2Bytes(chan, time - 5);
+	BASS_ChannelSetPosition(chan, pos, BASS_POS_BYTE);
 
 	BASS_ChannelPlay(chan, FALSE);
 
@@ -58,6 +62,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
 	WNDCLASSEX wcex;
 	MSG msg;
+	int spectrumWidth = SPECTRUM_BARS_AMOUNT * SPECTRUM_BAR_WIDTH_PX + (SPECTRUM_BARS_AMOUNT) * SPECTRUM_BARS_DISTANCE_PX;
 
 	if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
 		ShowError(0, "An incorrect version of BASS.DLL was loaded!");
@@ -79,10 +84,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	RegisterClassEx(&wcex);
 	hMainWnd = CreateWindow("Musicator", "Musicator", WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX,
-			CW_USEDEFAULT, 0, CLIENT_AREA_WIDTH_PX + 2 * GetSystemMetrics(SM_CXDLGFRAME), 
-			CLIENT_AREA_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME), NULL, NULL, hInstance, NULL);
+			CW_USEDEFAULT, 0, spectrumWidth + 50 + 2 * GetSystemMetrics(SM_CXDLGFRAME), 
+			SPECTRUM_HEIGHT_PX + CLIENT_CONTROLS_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME), 
+			NULL, NULL, hInstance, NULL);
 
-	spectrumVizualizer = new SpectrumVisualiser(hMainWnd);
+	spectrumVizualizer = new SpectrumVisualiser(hMainWnd, SPECTRUM_HEIGHT_PX, SPECTRUM_BAR_WIDTH_PX,
+			SPECTRUM_BARS_AMOUNT, SPECTRUM_BARS_DISTANCE_PX);
 
 	ShowWindow(hMainWnd, nCmdShow);
 	UpdateWindow(hMainWnd);

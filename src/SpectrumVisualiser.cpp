@@ -1,9 +1,19 @@
 #include "SpectrumVisualiser.h"
 
 #include <math.h>
+#include <memory.h>
 
-SpectrumVisualiser::SpectrumVisualiser(HWND hWnd)
+SpectrumVisualiser::SpectrumVisualiser(HWND hWnd, int height, int barWidth, int barsAmo, int barsDist)
 {
+	barWidthPx = barWidth;
+	barsAmount = barsAmo;
+	barsDistancePx = barsDist;
+	spectrumWidthPx = barsAmount * barWidth + (barsAmount - 1) * barsDistancePx;
+	spectrumHeightPx = height;
+	
+	scaleCoefficient = spectrumHeightPx / LOGICAL_SPECTRUM_HEIGHT;
+	unusedHeight = spectrumHeightPx % LOGICAL_SPECTRUM_HEIGHT;
+	
 	bitmapInfoBuffer = new BYTE[sizeof(BITMAPINFOHEADER) + COLORS_AMOUNT_IN_PALETTE * sizeof(RGBQUAD)];
 	bitmapInfoHeader = (BITMAPINFOHEADER *)bitmapInfoBuffer;
 	palette = (RGBQUAD *)(bitmapInfoBuffer + sizeof(BITMAPINFOHEADER));
@@ -35,8 +45,8 @@ void SpectrumVisualiser::CreateBitmap(HWND hWnd)
 void SpectrumVisualiser::InitializeBitmapInfoHeader()
 {
 	bitmapInfoHeader->biSize = sizeof(BITMAPINFOHEADER);
-	bitmapInfoHeader->biWidth = SPECTRUM_WIDTH_PX;
-	bitmapInfoHeader->biHeight = SPECTRUM_HEIGHT_PX;
+	bitmapInfoHeader->biWidth = spectrumWidthPx;
+	bitmapInfoHeader->biHeight = spectrumHeightPx;
 	bitmapInfoHeader->biPlanes = 1;
 	bitmapInfoHeader->biBitCount = BITMAP_BITS_PER_PIXEL;
 	bitmapInfoHeader->biCompression = BI_RGB;
@@ -70,13 +80,15 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 		int rightIntervalBorder;
 		int currentElementInInterval;
 		float maxValue;
-		int spectrumValue;
+		int spectrumColorValue;
+		int spectrumHeightValue;
+		int currentColorUsageCounter;
 		
-		memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, SPECTRUM_HEIGHT_PX * SPECTRUM_WIDTH_PX);
+		memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
 
-		for (int currentBarNumber = 0; currentBarNumber < BARS_AMOUNT; currentBarNumber++) {
+		for (int currentBarNumber = 0; currentBarNumber < barsAmount; currentBarNumber++) {
 			maxValue = 0;
-			rightIntervalBorder = (int)pow(2, currentBarNumber *MAX_2_POW / (BARS_AMOUNT - 1));
+			rightIntervalBorder = (int)pow(2, currentBarNumber * MAX_2_POW / (barsAmount - 1));
 			if (rightIntervalBorder <= leftIntervalBorder) {
 				rightIntervalBorder = leftIntervalBorder + 1;
 			}
@@ -92,19 +104,31 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 			}
 			leftIntervalBorder = currentElementInInterval;
 
-			spectrumValue = (int)(sqrt(maxValue) * SPECTRUM_HORIZONTAL_TRANSFORM_MULTIPLICATION_CONSTANT *
-				SPECTRUM_HEIGHT_PX + SPECTRUM_HORIZONTAL_TRANSFORM_ADDITION_CONSTANT);
-			if (spectrumValue > SPECTRUM_HEIGHT_PX) {
-				spectrumValue = SPECTRUM_HEIGHT_PX;
+			spectrumColorValue = (int)(sqrt(maxValue) * SPECTRUM_HORIZONTAL_TRANSFORM_MULTIPLICATION_CONSTANT *
+				LOGICAL_SPECTRUM_HEIGHT + SPECTRUM_HORIZONTAL_TRANSFORM_ADDITION_CONSTANT);
+			if (spectrumColorValue > LOGICAL_SPECTRUM_HEIGHT) {
+				spectrumColorValue = LOGICAL_SPECTRUM_HEIGHT;
+			}
+			if (spectrumColorValue < SPECTRUM_FIRST_COLOR_INDEX) {
+				spectrumColorValue = SPECTRUM_FIRST_COLOR_INDEX;
 			}
 
-			while (spectrumValue > 0) {
-				memset(spectrumBuffer + (spectrumValue - 1) * SPECTRUM_WIDTH_PX + currentBarNumber *
-					(SPECTRUM_WIDTH_PX / BARS_AMOUNT), spectrumValue, SPECTRUM_WIDTH_PX / BARS_AMOUNT - BARS_DISTANCE_PX);
-				spectrumValue--;
+			spectrumHeightValue = spectrumColorValue * scaleCoefficient + unusedHeight;
+			currentColorUsageCounter = 0;
+			while (spectrumHeightValue > 0) {
+				if ((spectrumColorValue > SPECTRUM_FIRST_COLOR_INDEX) && (currentColorUsageCounter == scaleCoefficient)) {
+					currentColorUsageCounter = 0;
+					spectrumColorValue--;
+				}
+
+				memset(spectrumBuffer + (spectrumHeightValue - 1) * spectrumWidthPx + currentBarNumber * (barWidthPx + barsDistancePx), 
+					spectrumColorValue, barWidthPx);
+
+				spectrumHeightValue--;
+				currentColorUsageCounter++;
 			}
 		}
-		BitBlt(hDC, x, y, SPECTRUM_WIDTH_PX, SPECTRUM_HEIGHT_PX, hSpectrumDC, 0, 0, SRCCOPY);
+		BitBlt(hDC, x, y, spectrumWidthPx, spectrumHeightPx, hSpectrumDC, 0, 0, SRCCOPY);
 		result = true;
 	}
 
