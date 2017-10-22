@@ -8,7 +8,7 @@
 #define SPECTRUM_BAR_WIDTH_PX 16
 #define SPECTRUM_BARS_DISTANCE_PX 2
 
-#define CLIENT_AREA_HEIGHT_PX 285
+#define CLIENT_AREA_HEIGHT_PX 275
 #define CLIENT_AREA_WIDTH_PX 490
 #define SPECTRUM_X 0
 #define SPECTRUM_Y 0
@@ -46,10 +46,10 @@ BOOL PlayFile(HWND hWnd)
 		return FALSE;
 	}
 
-	QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
-	double time = BASS_ChannelBytes2Seconds(chan, length);
-	QWORD pos = BASS_ChannelSeconds2Bytes(chan, time - 5);
-	BASS_ChannelSetPosition(chan, pos, BASS_POS_BYTE);
+	//QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
+	//double time = BASS_ChannelBytes2Seconds(chan, length);
+	//QWORD pos = BASS_ChannelSeconds2Bytes(chan, time - 1);
+	//BASS_ChannelSetPosition(chan, pos, BASS_POS_BYTE);
 
 	BASS_ChannelPlay(chan, FALSE);
 

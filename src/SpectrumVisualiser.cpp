@@ -75,6 +75,8 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 	float *fft = new float[FFT_ELEMENTS_AMOUNT];
 	bool result = false;
 
+	memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
+
 	if (BASS_ChannelGetData(channel, fft, BASS_DATA_FFT2048) != -1) {
 		int leftIntervalBorder = 0;
 		int rightIntervalBorder;
@@ -84,8 +86,6 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 		int spectrumHeightValue;
 		int currentColorUsageCounter;
 		
-		memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
-
 		for (int currentBarNumber = 0; currentBarNumber < barsAmount; currentBarNumber++) {
 			maxValue = 0;
 			rightIntervalBorder = (int)pow(2, currentBarNumber * MAX_2_POW / (barsAmount - 1));
@@ -128,9 +128,21 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 				currentColorUsageCounter++;
 			}
 		}
-		BitBlt(hDC, x, y, spectrumWidthPx, spectrumHeightPx, hSpectrumDC, 0, 0, SRCCOPY);
 		result = true;
 	}
+	else {
+		int zeroSpectrumHeight;
+		for (int i = 0; i < barsAmount; i++) {
+			zeroSpectrumHeight = unusedHeight;
+			while (zeroSpectrumHeight > 0) {
+				memset(spectrumBuffer + (zeroSpectrumHeight - 1) * spectrumWidthPx + i * (barWidthPx),
+					SPECTRUM_FIRST_COLOR_INDEX, barWidthPx - barsDistancePx);
+				zeroSpectrumHeight--;
+			}
+		}
+	}
+
+	BitBlt(hDC, x, y, spectrumWidthPx, spectrumHeightPx, hSpectrumDC, 0, 0, SRCCOPY);
 
 	delete fft;
 	ReleaseDC(hWnd, hDC);
