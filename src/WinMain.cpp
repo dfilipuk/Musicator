@@ -2,16 +2,14 @@
 
 #include "stdafx.h"
 #include "SpectrumVisualiser.h"
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
-#define SPECTRUM_BAR_WIDTH_PX 19
+#define SPECTRUM_BAR_WIDTH_PX 16
 #define SPECTRUM_BARS_DISTANCE_PX 2
 
-#define CLIENT_CONTROLS_HEIGHT_PX 0
+#define CLIENT_AREA_HEIGHT_PX 285
+#define CLIENT_AREA_WIDTH_PX 490
 #define SPECTRUM_X 0
 #define SPECTRUM_Y 0
 #define TIMER_INTERVAL 25
@@ -62,7 +60,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
 	WNDCLASSEX wcex;
 	MSG msg;
-	int spectrumWidth = SPECTRUM_BARS_AMOUNT * SPECTRUM_BAR_WIDTH_PX + (SPECTRUM_BARS_AMOUNT) * SPECTRUM_BARS_DISTANCE_PX;
 
 	if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
 		ShowError(0, "An incorrect version of BASS.DLL was loaded!");
@@ -84,8 +81,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	RegisterClassEx(&wcex);
 	hMainWnd = CreateWindow("Musicator", "Musicator", WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX,
-			CW_USEDEFAULT, 0, spectrumWidth + 50 + 2 * GetSystemMetrics(SM_CXDLGFRAME), 
-			SPECTRUM_HEIGHT_PX + CLIENT_CONTROLS_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME), 
+			CW_USEDEFAULT, 0, CLIENT_AREA_WIDTH_PX + 2 * GetSystemMetrics(SM_CXDLGFRAME), 
+			CLIENT_AREA_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME), 
 			NULL, NULL, hInstance, NULL);
 
 	spectrumVizualizer = new SpectrumVisualiser(hMainWnd, SPECTRUM_HEIGHT_PX, SPECTRUM_BAR_WIDTH_PX,

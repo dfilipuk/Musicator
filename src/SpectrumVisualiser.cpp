@@ -8,7 +8,7 @@ SpectrumVisualiser::SpectrumVisualiser(HWND hWnd, int height, int barWidth, int 
 	barWidthPx = barWidth;
 	barsAmount = barsAmo;
 	barsDistancePx = barsDist;
-	spectrumWidthPx = barsAmount * barWidth + (barsAmount - 1) * barsDistancePx;
+	spectrumWidthPx = barsAmount * barWidth;
 	spectrumHeightPx = height;
 	
 	scaleCoefficient = spectrumHeightPx / LOGICAL_SPECTRUM_HEIGHT;
@@ -121,8 +121,8 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 					spectrumColorValue--;
 				}
 
-				memset(spectrumBuffer + (spectrumHeightValue - 1) * spectrumWidthPx + currentBarNumber * (barWidthPx + barsDistancePx), 
-					spectrumColorValue, barWidthPx);
+				memset(spectrumBuffer + (spectrumHeightValue - 1) * spectrumWidthPx + currentBarNumber * (barWidthPx), 
+					spectrumColorValue, barWidthPx - barsDistancePx);
 
 				spectrumHeightValue--;
 				currentColorUsageCounter++;
