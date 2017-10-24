@@ -31,29 +31,53 @@ void ShowError(HWND hWnd, const char* errorMessage)
 	MessageBox(hWnd, errorMessage, "Error", MB_OK);
 }
 
-bool PlayFile(HWND hWnd)
+void StartSpectrumTimer()
 {
+	CreateTimerQueueTimer(&hSpectrumUpdateTimer, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL,
+		SPECTRUM_TIMER_INTERVAL, SPECTRUM_TIMER_INTERVAL, 0);
+}
+
+void StopSpectrumTimer()
+{
+	DeleteTimerQueueTimer(NULL, hSpectrumUpdateTimer, NULL);
+}
+
+void StopPlayingSong(Player *player)
+{
+	if (player->IsSongPlaying()) {
+		StopSpectrumTimer();
+	}
+	player->StopSong();
+	player->FreeSong();
+}
+
+bool StartPlayingNewSong(char *file, Player *player)
+{
+	StopPlayingSong(player);
+	if (!player->LoadSong(file)) {
+		return false;
+	}
+	if (!player->PlaySong()) {
+		return false;
+	}
+	StartSpectrumTimer();
+	return true;
+}
+
+void AddSong(HWND hWnd) {
 	char *file = openFileDialog->GetFilename(hWnd);
 	if (file == NULL) {
-		return false;
+		return ;
 	}
-
-	if (!player->LoadSong(file)) {
-		delete file;
-		return false;
-	}
+	StartPlayingNewSong(file, player);
 	delete file;
-	if (!player->PlaySong()) {
-		delete file;
-		return false;
-	}
-	return true;
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	WNDCLASSEX wcex;
 	MSG msg;
+	HACCEL hAccelTable;
 
 	if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
 		ShowError(0, "An incorrect version of BASS.DLL was loaded!");
@@ -86,9 +110,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	ShowWindow(hMainWnd, nCmdShow);
 	UpdateWindow(hMainWnd);
 
+	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR1));
+
 	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	delete openFileDialog;
@@ -109,20 +138,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			EndPaint(hWnd, &p);
 		}
 		break;
+	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case ID_FILE_ADDSONG:
+			AddSong(hWnd);
+			break;
+		}
+		break;
+	}
 	case WM_CREATE:
 		player = new Player();
 		if (!(player->InitializeDevice(hWnd))) {
 			ShowError(hWnd, "Can't initialize device!");
 			return -1;
 		}
-		if (!PlayFile(hWnd)) {
-			return -1;
-		}
-		CreateTimerQueueTimer(&hSpectrumUpdateTimer, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL,
-				SPECTRUM_TIMER_INTERVAL, SPECTRUM_TIMER_INTERVAL, 0);
 		break;
 	case WM_DESTROY:
-		DeleteTimerQueueTimer(NULL, hSpectrumUpdateTimer, NULL);
 		PostQuitMessage(0);
 		break;
 	default:
@@ -134,7 +167,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 {
 	if (player->IsSongPlaying()) {
-		spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, player->GetCurrentStreamHandler());
+		bool isStopped = !spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, player->GetCurrentStreamHandler());
+		if (isStopped) {
+			StopPlayingSong(player);
+		}
 	}
 	else {
 		spectrumVizualizer->DrawZeroSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y);
