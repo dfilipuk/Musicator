@@ -1,6 +1,7 @@
 #pragma comment(lib, "bass.lib")
 
 #include "stdafx.h"
+#include "resource.h"
 #include "SpectrumVisualiser.h"
 #include "OpenFileDialog.h"
 #include "Player.h"
@@ -9,22 +10,21 @@
 #define SPECTRUM_BARS_AMOUNT 30
 #define SPECTRUM_BAR_WIDTH_PX 16
 #define SPECTRUM_BARS_DISTANCE_PX 2
-
-#define CLIENT_AREA_HEIGHT_PX 275
-#define CLIENT_AREA_WIDTH_PX 490
 #define SPECTRUM_X 0
 #define SPECTRUM_Y 0
-#define TIMER_INTERVAL 25
+#define SPECTRUM_TIMER_INTERVAL 25
+
+#define CLIENT_AREA_HEIGHT_PX 285
+#define CLIENT_AREA_WIDTH_PX 490
 
 void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND hMainWnd;
+HANDLE hSpectrumUpdateTimer;
 SpectrumVisualiser *spectrumVizualizer;
 OpenFileDialog *openFileDialog;
 Player *player;
-HANDLE TIMER;
-DWORD chan;
 
 void ShowError(HWND hWnd, const char* errorMessage) 
 {
@@ -69,14 +69,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = NULL;
+	wcex.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
 	wcex.lpszClassName = "Musicator";
 	wcex.hIconSm = wcex.hIcon;
 
 	RegisterClassEx(&wcex);
 	hMainWnd = CreateWindow("Musicator", "Musicator", WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX,
 			CW_USEDEFAULT, 0, CLIENT_AREA_WIDTH_PX + 2 * GetSystemMetrics(SM_CXDLGFRAME), 
-			CLIENT_AREA_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME), 
+			CLIENT_AREA_HEIGHT_PX + GetSystemMetrics(SM_CYCAPTION) + 2 * GetSystemMetrics(SM_CYDLGFRAME) + GetSystemMetrics(SM_CYMENU),
 			NULL, NULL, hInstance, NULL);
 
 	spectrumVizualizer = new SpectrumVisualiser(hMainWnd, SPECTRUM_HEIGHT_PX, SPECTRUM_BAR_WIDTH_PX,
@@ -105,7 +105,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			PAINTSTRUCT p;
 			HDC dc;
 			dc = BeginPaint(hWnd, &p);
-			spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, chan);
+			UpdateSpectrum(NULL, false);
 			EndPaint(hWnd, &p);
 		}
 		break;
@@ -118,10 +118,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (!PlayFile(hWnd)) {
 			return -1;
 		}
-		CreateTimerQueueTimer(&TIMER, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL, TIMER_INTERVAL, TIMER_INTERVAL, 0);
+		CreateTimerQueueTimer(&hSpectrumUpdateTimer, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL,
+				SPECTRUM_TIMER_INTERVAL, SPECTRUM_TIMER_INTERVAL, 0);
 		break;
 	case WM_DESTROY:
-		DeleteTimerQueueTimer(NULL, TIMER, NULL);
+		DeleteTimerQueueTimer(NULL, hSpectrumUpdateTimer, NULL);
 		PostQuitMessage(0);
 		break;
 	default:
