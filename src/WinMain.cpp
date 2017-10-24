@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "SpectrumVisualiser.h"
+#include "OpenFileDialog.h"
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
@@ -19,6 +20,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND hMainWnd;
 SpectrumVisualiser *spectrumVizualizer;
+OpenFileDialog *openFileDialog;
 HANDLE TIMER;
 DWORD chan;
 
@@ -29,22 +31,17 @@ void ShowError(HWND hWnd, const char* errorMessage)
 
 BOOL PlayFile(HWND hWnd)
 {
-	char file[MAX_PATH] = "";
-	OPENFILENAME ofn = { 0 };
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hWnd;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrFile = file;
-	ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
-	ofn.lpstrTitle = "Select a file to play";
-	ofn.lpstrFilter = "playable files\0*.mo3;*.xm;*.mod;*.s3m;*.it;*.mtm;*.umx;*.mp3;*.mp2;*.mp1;*.ogg;*.wav;*.aif\0All files\0*.*\0\0";
-	if (!GetOpenFileName(&ofn)) return FALSE;
+	char *file = openFileDialog->GetFilename(hWnd);
+	if (file == NULL) {
+		return false;
+	}
 
 	if (!(chan = BASS_StreamCreateFile(FALSE, file, 0, 0, BASS_MUSIC_AUTOFREE))
 		&& !(chan = BASS_MusicLoad(FALSE, file, 0, 0, BASS_MUSIC_RAMP | BASS_MUSIC_AUTOFREE | BASS_MUSIC_PRESCAN, 1))) {
 		ShowError(hWnd, "Can't play file");
 		return FALSE;
 	}
+	delete file;
 
 	//QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
 	//double time = BASS_ChannelBytes2Seconds(chan, length);
@@ -87,6 +84,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	spectrumVizualizer = new SpectrumVisualiser(hMainWnd, SPECTRUM_HEIGHT_PX, SPECTRUM_BAR_WIDTH_PX,
 			SPECTRUM_BARS_AMOUNT, SPECTRUM_BARS_DISTANCE_PX);
+	openFileDialog = new OpenFileDialog();
 
 	ShowWindow(hMainWnd, nCmdShow);
 	UpdateWindow(hMainWnd);
@@ -96,6 +94,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		DispatchMessage(&msg);
 	}
 
+	delete openFileDialog;
 	delete spectrumVizualizer;
 
 	return (int)msg.wParam;
