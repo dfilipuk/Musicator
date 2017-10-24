@@ -88,7 +88,7 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 		
 		for (int currentBarNumber = 0; currentBarNumber < barsAmount; currentBarNumber++) {
 			maxValue = 0;
-			rightIntervalBorder = (int)pow(2, currentBarNumber * MAX_2_POW / (barsAmount - 1));
+			rightIntervalBorder = static_cast<int>(pow(2, currentBarNumber * MAX_2_POW / (barsAmount - 1)));
 			if (rightIntervalBorder <= leftIntervalBorder) {
 				rightIntervalBorder = leftIntervalBorder + 1;
 			}
@@ -104,7 +104,7 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 			}
 			leftIntervalBorder = currentElementInInterval;
 
-			spectrumColorValue = (int)(sqrt(maxValue) * SPECTRUM_HORIZONTAL_TRANSFORM_MULTIPLICATION_CONSTANT *
+			spectrumColorValue = static_cast<int>(sqrt(maxValue) * SPECTRUM_HORIZONTAL_TRANSFORM_MULTIPLICATION_CONSTANT *
 				LOGICAL_SPECTRUM_HEIGHT + SPECTRUM_HORIZONTAL_TRANSFORM_ADDITION_CONSTANT);
 			if (spectrumColorValue > LOGICAL_SPECTRUM_HEIGHT) {
 				spectrumColorValue = LOGICAL_SPECTRUM_HEIGHT;
