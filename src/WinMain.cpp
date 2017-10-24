@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "SpectrumVisualiser.h"
 #include "OpenFileDialog.h"
+#include "Player.h"
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
@@ -21,6 +22,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 HWND hMainWnd;
 SpectrumVisualiser *spectrumVizualizer;
 OpenFileDialog *openFileDialog;
+Player *player;
 HANDLE TIMER;
 DWORD chan;
 
@@ -29,28 +31,23 @@ void ShowError(HWND hWnd, const char* errorMessage)
 	MessageBox(hWnd, errorMessage, "Error", MB_OK);
 }
 
-BOOL PlayFile(HWND hWnd)
+bool PlayFile(HWND hWnd)
 {
 	char *file = openFileDialog->GetFilename(hWnd);
 	if (file == NULL) {
 		return false;
 	}
 
-	if (!(chan = BASS_StreamCreateFile(FALSE, file, 0, 0, BASS_MUSIC_AUTOFREE))
-		&& !(chan = BASS_MusicLoad(FALSE, file, 0, 0, BASS_MUSIC_RAMP | BASS_MUSIC_AUTOFREE | BASS_MUSIC_PRESCAN, 1))) {
-		ShowError(hWnd, "Can't play file");
-		return FALSE;
+	if (!player->LoadSong(file)) {
+		delete file;
+		return false;
 	}
 	delete file;
-
-	//QWORD length = BASS_ChannelGetLength(chan, BASS_POS_BYTE);
-	//double time = BASS_ChannelBytes2Seconds(chan, length);
-	//QWORD pos = BASS_ChannelSeconds2Bytes(chan, time - 1);
-	//BASS_ChannelSetPosition(chan, pos, BASS_POS_BYTE);
-
-	BASS_ChannelPlay(chan, FALSE);
-
-	return TRUE;
+	if (!player->PlaySong()) {
+		delete file;
+		return false;
+	}
+	return true;
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -113,19 +110,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_CREATE:
-		if (!BASS_Init(-1, 44100, 0, hWnd, NULL)) {
-			ShowError(hWnd, "Can't initialize device");
+		player = new Player();
+		if (!(player->InitializeDevice(hWnd))) {
+			ShowError(hWnd, "Can't initialize device!");
 			return -1;
 		}
 		if (!PlayFile(hWnd)) {
-			BASS_Free();
 			return -1;
 		}
 		CreateTimerQueueTimer(&TIMER, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL, TIMER_INTERVAL, TIMER_INTERVAL, 0);
 		break;
 	case WM_DESTROY:
 		DeleteTimerQueueTimer(NULL, TIMER, NULL);
-		BASS_Free();
 		PostQuitMessage(0);
 		break;
 	default:
@@ -136,6 +132,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 {
-	spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, chan);
+	if (player->IsSongPlaying()) {
+		spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, player->GetCurrentStreamHandler());
+	}
+	else {
+		spectrumVizualizer->DrawZeroSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y);
+	}
 }
 

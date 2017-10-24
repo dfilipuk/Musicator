@@ -24,7 +24,7 @@ char * OpenFileDialog::GetFilename(HWND hWnd)
 	ofn.lpstrFile[0] = '\0';
 	ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_PATHMUSTEXIST;
 	ofn.lpstrTitle = "Select a file to play";
-	ofn.lpstrFilter = "Playable files\0*.mo3;*.xm;*.mod;*.s3m;*.it;*.mtm;*.umx;*.mp3;*.mp2;*.mp1;*.ogg;*.wav;*.aif\0";
+	ofn.lpstrFilter = "Playable files\0*.mp3;*.mp2;*.mp1;*.ogg;*.wav;*.aif\0";
 	
 	if (GetOpenFileName(&ofn)) {
 		return file;

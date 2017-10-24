@@ -5,11 +5,6 @@
 class SpectrumVisualiser
 {
 private:
-	//const int SPECTRUM_WIDTH_PX = 500;
-	//const int SPECTRUM_HEIGHT_PX = 255;
-	//const int BARS_DISTANCE_PX = 2;
-	//const int BARS_AMOUNT = 30;
-
 	const int LOGICAL_SPECTRUM_HEIGHT = 255;
 	const int COLORS_AMOUNT_IN_PALETTE = 256;
 	const int SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX = 0;
@@ -44,5 +39,6 @@ public:
 	SpectrumVisualiser(HWND hWnd, int height, int barWidth, int barsAmo, int barsDist);
 	virtual ~SpectrumVisualiser();
 	bool DrawSpectrum(HWND hWnd, int x, int y, DWORD channel);
+	void DrawZeroSpectrum(HWND hWnd, int x, int y);
 };
 

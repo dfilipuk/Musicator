@@ -71,11 +71,9 @@ void SpectrumVisualiser::InitializePalette()
 
 bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 {
-	HDC hDC = GetDC(hWnd);
+	HDC hDC;
 	float *fft = new float[FFT_ELEMENTS_AMOUNT];
 	bool result = false;
-
-	memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
 
 	if (BASS_ChannelGetData(channel, fft, BASS_DATA_FFT2048) != -1) {
 		int leftIntervalBorder = 0;
@@ -86,6 +84,9 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 		int spectrumHeightValue;
 		int currentColorUsageCounter;
 		
+		hDC = GetDC(hWnd);
+		memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
+
 		for (int currentBarNumber = 0; currentBarNumber < barsAmount; currentBarNumber++) {
 			maxValue = 0;
 			rightIntervalBorder = static_cast<int>(pow(2, currentBarNumber * MAX_2_POW / (barsAmount - 1)));
@@ -129,23 +130,33 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 			}
 		}
 		result = true;
+		BitBlt(hDC, x, y, spectrumWidthPx, spectrumHeightPx, hSpectrumDC, 0, 0, SRCCOPY);
+		ReleaseDC(hWnd, hDC);
 	}
 	else {
-		int zeroSpectrumHeight;
-		for (int i = 0; i < barsAmount; i++) {
-			zeroSpectrumHeight = unusedHeight;
-			while (zeroSpectrumHeight > 0) {
-				memset(spectrumBuffer + (zeroSpectrumHeight - 1) * spectrumWidthPx + i * (barWidthPx),
-					SPECTRUM_FIRST_COLOR_INDEX, barWidthPx - barsDistancePx);
-				zeroSpectrumHeight--;
-			}
+		DrawZeroSpectrum(hWnd, x, y);
+	}
+
+	delete fft;
+	return result;
+}
+
+void SpectrumVisualiser::DrawZeroSpectrum(HWND hWnd, int x, int y)
+{
+	HDC hDC = GetDC(hWnd);
+	memset(spectrumBuffer, SPECTRUM_BACKGROUBD_COLOR_PALETTE_INDEX, spectrumHeightPx * spectrumWidthPx);
+
+	int zeroSpectrumHeight;
+	for (int i = 0; i < barsAmount; i++) {
+		zeroSpectrumHeight = unusedHeight;
+		while (zeroSpectrumHeight > 0) {
+			memset(spectrumBuffer + (zeroSpectrumHeight - 1) * spectrumWidthPx + i * (barWidthPx),
+				SPECTRUM_FIRST_COLOR_INDEX, barWidthPx - barsDistancePx);
+			zeroSpectrumHeight--;
 		}
 	}
 
 	BitBlt(hDC, x, y, spectrumWidthPx, spectrumHeightPx, hSpectrumDC, 0, 0, SRCCOPY);
-
-	delete fft;
 	ReleaseDC(hWnd, hDC);
-	return result;
 }
 
