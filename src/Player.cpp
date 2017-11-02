@@ -122,3 +122,7 @@ void Player::FreeSong()
 	}
 }
 
+bool Player::IsMusicLibVersionCorrect()
+{
+	return (HIWORD(BASS_GetVersion()) == BASSVERSION);
+}

@@ -81,7 +81,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	MSG msg;
 	HACCEL hAccelTable;
 
-	if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
+	if (!Player::IsMusicLibVersionCorrect()) {
 		ShowError(0, "An incorrect version of BASS.DLL was loaded!");
 		return 0;
 	}

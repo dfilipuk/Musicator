@@ -29,5 +29,6 @@ public:
 	void StopSong();
 	void RunForward();
 	void RunBackward();
+	static bool IsMusicLibVersionCorrect();
 };
 
