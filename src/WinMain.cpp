@@ -5,6 +5,7 @@
 #include "SpectrumVisualiser.h"
 #include "OpenFileDialog.h"
 #include "Player.h"
+#include "GUIControls.h"
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
@@ -14,7 +15,7 @@
 #define SPECTRUM_Y 0
 #define SPECTRUM_TIMER_INTERVAL 25
 
-#define CLIENT_AREA_HEIGHT_PX 285
+#define CLIENT_AREA_HEIGHT_PX 500
 #define CLIENT_AREA_WIDTH_PX 490
 
 void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired);
@@ -25,6 +26,7 @@ HANDLE hSpectrumUpdateTimer;
 SpectrumVisualiser *spectrumVizualizer;
 OpenFileDialog *openFileDialog;
 Player *player;
+GUIControls *controls;
 
 void ShowError(HWND hWnd, const char* errorMessage) 
 {
@@ -84,6 +86,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		return 0;
 	}
 
+	controls = new GUIControls();
+	player = new Player();
+	openFileDialog = new OpenFileDialog();
+
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_DBLCLKS;
 	wcex.lpfnWndProc = WndProc;
@@ -92,7 +98,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW);
 	wcex.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
 	wcex.lpszClassName = "Musicator";
 	wcex.hIconSm = wcex.hIcon;
@@ -105,7 +111,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	spectrumVizualizer = new SpectrumVisualiser(hMainWnd, SPECTRUM_HEIGHT_PX, SPECTRUM_BAR_WIDTH_PX,
 			SPECTRUM_BARS_AMOUNT, SPECTRUM_BARS_DISTANCE_PX);
-	openFileDialog = new OpenFileDialog();
 
 	ShowWindow(hMainWnd, nCmdShow);
 	UpdateWindow(hMainWnd);
@@ -120,6 +125,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 	}
 
+	delete player;
+	delete controls;
 	delete openFileDialog;
 	delete spectrumVizualizer;
 
@@ -145,15 +152,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_FILE_ADDSONG:
 			AddSong(hWnd);
 			break;
+		case 0:
+			ShowError(hWnd, "- 10 sec");
+			break;
+		case 1:
+			ShowError(hWnd, "Play");
+			break;
+		case 2:
+			ShowError(hWnd, "Stop");
+			break;
+		case 3:
+			ShowError(hWnd, "Pause");
+			break;
+		case 4:
+			ShowError(hWnd, "+ 10 sec");
+			break;
 		}
 		break;
 	}
 	case WM_CREATE:
-		player = new Player();
 		if (!(player->InitializeDevice(hWnd))) {
 			ShowError(hWnd, "Can't initialize device!");
 			return -1;
 		}
+		controls->CreateControls(hWnd);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
