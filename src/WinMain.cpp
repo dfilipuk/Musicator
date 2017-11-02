@@ -46,11 +46,10 @@ void StopSpectrumTimer()
 
 void StopPlayingSong(Player *player)
 {
-	if (player->IsSongPlaying()) {
+	if (player->IsSongLoaded()) {
 		StopSpectrumTimer();
 	}
 	player->StopSong();
-	player->FreeSong();
 }
 
 bool StartPlayingNewSong(char *file, Player *player)
@@ -88,7 +87,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 
 	controls = new GUIControls();
-	player = new Player();
+	player = new Player(RUN_STEP_SEC);
 	openFileDialog = new OpenFileDialog();
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
@@ -153,20 +152,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_FILE_ADDSONG:
 			AddSong(hWnd);
 			break;
-		case 0:
-			ShowError(hWnd, "- 10 sec");
+		case BTN_BACKWARD_ID:
+			player->RunBackward();
+			SetFocus(hWnd);
 			break;
-		case 1:
-			ShowError(hWnd, "Play");
+		case BTN_PLAY_ID:
+			player->PlaySong();
+			controls->SetButtonsState(bsPlaying);
+			StartSpectrumTimer();
 			break;
-		case 2:
-			ShowError(hWnd, "Stop");
+		case BTN_STOP_ID:
+			StopPlayingSong(player);
+			controls->SetButtonsState(bsStopped);
+			spectrumVizualizer->DrawZeroSpectrum(hWnd, SPECTRUM_X, SPECTRUM_Y);
 			break;
-		case 3:
-			ShowError(hWnd, "Pause");
+		case BTN_PAUSE_ID:
+			player->PauseSong();
+			controls->SetButtonsState(bsPaused);
+			StopSpectrumTimer();
+			InvalidateRect(hWnd, NULL, true);
 			break;
-		case 4:
-			ShowError(hWnd, "+ 10 sec");
+		case BTN_FORWARD_ID:
+			player->RunForward();
+			SetFocus(hWnd);
 			break;
 		}
 		break;
@@ -189,10 +197,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 {
-	if (player->IsSongPlaying()) {
+	if (player->IsSongLoaded()) {
 		bool isStopped = !spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, player->GetCurrentStreamHandler());
 		if (isStopped) {
 			StopPlayingSong(player);
+			controls->SetButtonsState(bsStopped);
 		}
 	}
 	else {

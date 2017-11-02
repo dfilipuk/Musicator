@@ -2,11 +2,13 @@
 
 
 
-Player::Player()
+Player::Player(int runStepSec)
 {
 	isSongLoaded = false;
 	isSongPlaying = false;
 	hCurrentStream = 0;
+	this->runStepSec = runStepSec > 0 ? runStepSec : 0;
+	runStepBytes = 0;
 }
 
 
@@ -49,6 +51,9 @@ bool Player::LoadSong(char * file)
 		return false;
 	}
 	isSongLoaded = true;
+	channelLengthBytes = BASS_ChannelGetLength(hCurrentStream, BASS_POS_BYTE);
+	runStepBytes = BASS_ChannelSeconds2Bytes(hCurrentStream, runStepSec);
+
 	return true;
 }
 
@@ -66,12 +71,47 @@ bool Player::PlaySong()
 	}
 }
 
+void Player::PauseSong()
+{
+	if (isSongPlaying) {
+		BASS_ChannelPause(hCurrentStream);
+		isSongPlaying = false;
+	}
+}
+
 void Player::StopSong()
 {
 	if (isSongPlaying) {
 		BASS_ChannelStop(hCurrentStream);
 		isSongPlaying = false;
 	}
+	FreeSong();
+}
+
+void Player::RunForward()
+{
+	int currentPositionBytes;
+	if ((!isSongLoaded) || (runStepBytes <= 0) || (channelLengthBytes <= 0)) {
+		return;
+	}
+	currentPositionBytes = BASS_ChannelGetPosition(hCurrentStream, BASS_POS_BYTE);
+	currentPositionBytes = currentPositionBytes + runStepBytes > channelLengthBytes
+		? channelLengthBytes - 1
+		: currentPositionBytes + runStepBytes;
+	BASS_ChannelSetPosition(hCurrentStream, currentPositionBytes, BASS_POS_BYTE);
+}
+
+void Player::RunBackward()
+{
+	int currentPositionBytes;
+	if ((!isSongLoaded) || (runStepBytes <= 0) || (channelLengthBytes <= 0)) {
+		return;
+	}
+	currentPositionBytes = BASS_ChannelGetPosition(hCurrentStream, BASS_POS_BYTE);
+	currentPositionBytes = currentPositionBytes - runStepBytes <= 0
+		? 1
+		: currentPositionBytes - runStepBytes;
+	BASS_ChannelSetPosition(hCurrentStream, currentPositionBytes, BASS_POS_BYTE);
 }
 
 void Player::FreeSong()
