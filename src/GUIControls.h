@@ -8,11 +8,14 @@
 #define BTN_PAUSE_ID 3
 #define BTN_FORWARD_ID 4
 
+enum ButtonsState { bsStopped, bsPlaying, bsPaused };
+
 class GUIControls
 {
 private:
 	HWND hWndBtnBackward, hWndBtnPlay, hWndBtnStop, hWndBtnPause, hWndBtnForward;
 public:
+	void SetButtonsState(ButtonsState bs);
 	void CreateControls(HWND hWndParent);
 	GUIControls();
 	virtual ~GUIControls();

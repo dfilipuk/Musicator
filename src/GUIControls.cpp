@@ -18,6 +18,33 @@ GUIControls::~GUIControls()
 {
 }
 
+void GUIControls::SetButtonsState(ButtonsState bs)
+{
+	bool isBtnBackwardEnabled = false;
+	bool isBtnPlayEnabled = false;
+	bool isBtnStopEnabled = false;
+	bool isBtnPauseEnabled = false;
+	bool isBtnForwardEnabled = false;
+
+	switch (bs) {
+	case bsPlaying:
+		isBtnBackwardEnabled = true;
+		isBtnForwardEnabled = true;
+		isBtnStopEnabled = true;
+		isBtnPauseEnabled = true;
+		break;
+	case bsPaused:
+		isBtnPlayEnabled = true;
+		break;
+	}
+
+	EnableWindow(hWndBtnBackward, isBtnBackwardEnabled);
+	EnableWindow(hWndBtnPlay, isBtnPlayEnabled);
+	EnableWindow(hWndBtnStop, isBtnStopEnabled);
+	EnableWindow(hWndBtnPause, isBtnPauseEnabled);
+	EnableWindow(hWndBtnForward, isBtnBackwardEnabled);
+}
+
 void GUIControls::CreateControls(HWND hWndParent)
 {
 	hWndBtnBackward = CreateWindow("BUTTON", "- 10 sec", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
@@ -35,5 +62,6 @@ void GUIControls::CreateControls(HWND hWndParent)
 	hWndBtnForward = CreateWindow("BUTTON", "+ 10 sec", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
 		BTN_FORWARD_X, BTN_Y, BTN_WIDTH, BTN_HEIGHT, hWndParent, (HMENU)BTN_FORWARD_ID,
 		(HINSTANCE)GetWindowLong(hWndParent, GWL_HINSTANCE), NULL);
+	SetButtonsState(bsStopped);
 }
 

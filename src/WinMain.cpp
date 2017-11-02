@@ -72,6 +72,7 @@ void AddSong(HWND hWnd) {
 		return ;
 	}
 	StartPlayingNewSong(file, player);
+	controls->SetButtonsState(bsPlaying);
 	delete file;
 }
 
