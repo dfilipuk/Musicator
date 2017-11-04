@@ -66,7 +66,8 @@ bool StartPlayingNewSong(char *file, Player *player)
 	return true;
 }
 
-void AddSong(HWND hWnd) {
+void AddSong(HWND hWnd) 
+{
 	char *file = openFileDialog->GetFilename(hWnd);
 	if (file == NULL) {
 		return ;
@@ -74,6 +75,15 @@ void AddSong(HWND hWnd) {
 	StartPlayingNewSong(file, player);
 	controls->SetButtonsState(bsPlaying);
 	delete file;
+}
+
+void RemoveSong()
+{
+	int selectedSongIndex = controls->GetSelectedListViewItemInd();
+	while (selectedSongIndex != -1) {
+		controls->DeleteElementFromListView(selectedSongIndex);
+		selectedSongIndex = controls->GetSelectedListViewItemInd();
+	}
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -152,6 +162,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case ID_FILE_ADDSONG:
 			AddSong(hWnd);
+			break;
+		case ID_FILE_REMOVESONG:
+			RemoveSong();
 			break;
 		case BTN_BACKWARD_ID:
 			player->RunBackward();
