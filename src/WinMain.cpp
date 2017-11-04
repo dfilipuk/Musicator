@@ -190,6 +190,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 
 		}
+		SetFocus(hWnd);
 		break;
 	case WM_CREATE:
 		if (!(player->InitializeDevice(hWnd))) {
