@@ -1,4 +1,5 @@
 #pragma comment(lib, "bass.lib")
+#pragma comment(lib, "ComCtl32.Lib")
 
 #include "stdafx.h"
 #include "resource.h"
@@ -179,6 +180,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
+	case WM_NOTIFY:
+		LPNMHDR lpnmHdr;
+		lpnmHdr = (LPNMHDR)lParam;
+		if ((lpnmHdr->idFrom == LV_PLAYLIST_ID) && (lpnmHdr->code == NM_CLICK || lpnmHdr->code == NM_RCLICK)) {
+
+		} 
+		else if ((lpnmHdr->idFrom == LV_PLAYLIST_ID) && (lpnmHdr->code == NM_DBLCLK))
+		{
+
+		}
+		break;
 	case WM_CREATE:
 		if (!(player->InitializeDevice(hWnd))) {
 			ShowError(hWnd, "Can't initialize device!");
