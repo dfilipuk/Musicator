@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "GUIControls.h"
 #include "Song.h"
+#include "Playlist.h"
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
@@ -28,6 +29,7 @@ HANDLE hSpectrumUpdateTimer;
 SpectrumVisualiser *spectrumVizualizer;
 OpenFileDialog *openFileDialog;
 Player *player;
+Playlist *playlist;
 GUIControls *controls;
 bool isSpectrumTimerWorking = false;
 
@@ -76,28 +78,47 @@ bool StartPlayingNewSong(char *file, Player *player)
 	return true;
 }
 
-void AddSong(HWND hWnd) 
+void AddSongAction(HWND hWnd) 
 {
 	Song *newSong;
 	char *file = openFileDialog->GetFilename(hWnd);
 	if (file == NULL) {
 		return;
 	}
+
+	if (playlist->IsSongAlreadyExists(file)) {
+		delete file;
+		return;
+	}
+
 	int songLengthInSeconds = player->GetSongLengthInSeconds(file);
 	if (songLengthInSeconds < 0) {
 		ShowError(hWnd, "Unable to open file!");
+		delete file;
 		return;
 	}
+
 	newSong = new Song(file, songLengthInSeconds);
+	playlist->AddSong(newSong);
 	controls->AddElementToListView(newSong->GetFileName(), newSong->GetTime());
-	delete newSong;
 }
 
-void RemoveSong()
+void StopSongAction(HWND hWnd)
+{
+	StopPlayingSong(player);
+	controls->SetButtonsState(bsStopped);
+	spectrumVizualizer->DrawZeroSpectrum(hWnd, SPECTRUM_X, SPECTRUM_Y);
+}
+
+void RemoveSongAction(HWND hWnd)
 {
 	int selectedSongIndex = controls->GetSelectedListViewItemInd();
 	while (selectedSongIndex != -1) {
 		controls->DeleteElementFromListView(selectedSongIndex);
+		if (selectedSongIndex == playlist->GetCurrentSongIndex()) {
+			StopSongAction(hWnd);
+		}
+		playlist->RemoveSongByIndex(selectedSongIndex);
 		selectedSongIndex = controls->GetSelectedListViewItemInd();
 	}
 }
@@ -115,6 +136,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	controls = new GUIControls();
 	player = new Player(RUN_STEP_SEC);
+	playlist = new Playlist();
 	openFileDialog = new OpenFileDialog();
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
@@ -152,6 +174,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 	}
 
+	delete playlist;
 	delete player;
 	delete controls;
 	delete openFileDialog;
@@ -177,10 +200,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam))
 		{
 		case ID_FILE_ADDSONG:
-			AddSong(hWnd);
+			AddSongAction(hWnd);
 			break;
 		case ID_FILE_REMOVESONG:
-			RemoveSong();
+			RemoveSongAction(hWnd);
 			break;
 		case BTN_BACKWARD_ID:
 			player->RunBackward();
@@ -192,9 +215,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			StartSpectrumTimer();
 			break;
 		case BTN_STOP_ID:
-			StopPlayingSong(player);
-			controls->SetButtonsState(bsStopped);
-			spectrumVizualizer->DrawZeroSpectrum(hWnd, SPECTRUM_X, SPECTRUM_Y);
+			StopSongAction(hWnd);
 			break;
 		case BTN_PAUSE_ID:
 			player->PauseSong();
@@ -212,12 +233,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_NOTIFY:
 		LPNMHDR lpnmHdr;
 		lpnmHdr = (LPNMHDR)lParam;
-		if ((lpnmHdr->idFrom == LV_PLAYLIST_ID) && (lpnmHdr->code == NM_CLICK || lpnmHdr->code == NM_RCLICK)) {
-
-		} 
-		else if ((lpnmHdr->idFrom == LV_PLAYLIST_ID) && (lpnmHdr->code == NM_DBLCLK))
+		if ((lpnmHdr->idFrom == LV_PLAYLIST_ID) && (lpnmHdr->code == NM_DBLCLK))
 		{
-
+			int selectedSongIndex = controls->GetSelectedListViewItemInd();
+			Song *selectedSong = playlist->GetSongByIndex(selectedSongIndex);
+			if (selectedSong != NULL) {
+				playlist->SetCurrentSongIndex(selectedSongIndex);
+				StartPlayingNewSong(selectedSong->GetFilePath(), player);
+				controls->SetButtonsState(bsPlaying);
+			}
 		}
 		SetFocus(hWnd);
 		break;

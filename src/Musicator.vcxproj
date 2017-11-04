@@ -114,6 +114,7 @@
     <ClCompile Include="GUIControls.cpp" />
     <ClCompile Include="OpenFileDialog.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Playlist.cpp" />
     <ClCompile Include="Song.cpp" />
     <ClCompile Include="SpectrumVisualiser.cpp" />
     <ClCompile Include="stdafx.cpp" />
@@ -124,6 +125,7 @@
     <ClInclude Include="GUIControls.h" />
     <ClInclude Include="OpenFileDialog.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Playlist.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Song.h" />
     <ClInclude Include="SpectrumVisualiser.h" />
