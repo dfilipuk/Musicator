@@ -28,6 +28,7 @@ SpectrumVisualiser *spectrumVizualizer;
 OpenFileDialog *openFileDialog;
 Player *player;
 GUIControls *controls;
+bool isSpectrumTimerWorking = false;
 
 void ShowError(HWND hWnd, const char* errorMessage) 
 {
@@ -36,20 +37,28 @@ void ShowError(HWND hWnd, const char* errorMessage)
 
 void StartSpectrumTimer()
 {
-	CreateTimerQueueTimer(&hSpectrumUpdateTimer, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL,
-		SPECTRUM_TIMER_INTERVAL, SPECTRUM_TIMER_INTERVAL, 0);
+	if (!isSpectrumTimerWorking) {
+		CreateTimerQueueTimer(&hSpectrumUpdateTimer, NULL, (WAITORTIMERCALLBACK)&UpdateSpectrum, NULL,
+			SPECTRUM_TIMER_INTERVAL, SPECTRUM_TIMER_INTERVAL, 0);
+		isSpectrumTimerWorking = true;
+	}
 }
 
 void StopSpectrumTimer()
 {
-	DeleteTimerQueueTimer(NULL, hSpectrumUpdateTimer, NULL);
+	if (isSpectrumTimerWorking) {
+		if (DeleteTimerQueueTimer(NULL, hSpectrumUpdateTimer, NULL) != 0) {
+			isSpectrumTimerWorking = false;
+		}
+		else if (GetLastError() == ERROR_IO_PENDING) {
+			isSpectrumTimerWorking = false;
+		}
+	}
 }
 
 void StopPlayingSong(Player *player)
 {
-	if (player->IsSongLoaded()) {
-		StopSpectrumTimer();
-	}
+	StopSpectrumTimer();
 	player->StopSong();
 }
 
