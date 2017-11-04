@@ -29,6 +29,7 @@ public:
 	void StopSong();
 	void RunForward();
 	void RunBackward();
+	int GetSongLengthInSeconds(char *filePath);
 	static bool IsMusicLibVersionCorrect();
 };
 

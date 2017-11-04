@@ -122,6 +122,18 @@ void Player::FreeSong()
 	}
 }
 
+int Player::GetSongLengthInSeconds(char * filePath)
+{
+	HSTREAM stream = BASS_StreamCreateFile(FALSE, filePath, 0, 0, BASS_MUSIC_AUTOFREE);
+	if (stream == 0) {
+		return -1;
+	}
+	int lengthInBytes = BASS_ChannelGetLength(stream, BASS_POS_BYTE);
+	int lengthInSeconds = BASS_ChannelBytes2Seconds(stream, lengthInBytes);
+	BASS_StreamFree(stream);
+	return lengthInSeconds;
+}
+
 bool Player::IsMusicLibVersionCorrect()
 {
 	return (HIWORD(BASS_GetVersion()) == BASSVERSION);

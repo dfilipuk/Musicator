@@ -7,6 +7,7 @@
 #include "OpenFileDialog.h"
 #include "Player.h"
 #include "GUIControls.h"
+#include "Song.h"
 
 #define SPECTRUM_HEIGHT_PX 275
 #define SPECTRUM_BARS_AMOUNT 30
@@ -77,13 +78,19 @@ bool StartPlayingNewSong(char *file, Player *player)
 
 void AddSong(HWND hWnd) 
 {
+	Song *newSong;
 	char *file = openFileDialog->GetFilename(hWnd);
 	if (file == NULL) {
-		return ;
+		return;
 	}
-	StartPlayingNewSong(file, player);
-	controls->SetButtonsState(bsPlaying);
-	delete file;
+	int songLengthInSeconds = player->GetSongLengthInSeconds(file);
+	if (songLengthInSeconds < 0) {
+		ShowError(hWnd, "Unable to open file!");
+		return;
+	}
+	newSong = new Song(file, songLengthInSeconds);
+	controls->AddElementToListView(newSong->GetFileName(), newSong->GetTime());
+	delete newSong;
 }
 
 void RemoveSong()
