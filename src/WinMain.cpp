@@ -173,12 +173,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			DispatchMessage(&msg);
 		}
 	}
-
-	delete playlist;
+	
 	delete player;
 	delete controls;
 	delete openFileDialog;
 	delete spectrumVizualizer;
+	delete playlist;
 
 	return (int)msg.wParam;
 }
@@ -253,6 +253,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		controls->CreateControls(hWnd);
 		break;
 	case WM_DESTROY:
+		StopPlayingSong(player);
 		PostQuitMessage(0);
 		break;
 	default:
@@ -268,6 +269,11 @@ void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 		if (isStopped) {
 			StopPlayingSong(player);
 			controls->SetButtonsState(bsStopped);
+			Song *nextSong = playlist->GetNextSong();
+			if (nextSong != NULL) {
+				StartPlayingNewSong(nextSong->GetFilePath(), player);
+				controls->SetButtonsState(bsPlaying);
+			}
 		}
 	}
 	else {

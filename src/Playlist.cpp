@@ -74,3 +74,12 @@ void Playlist::SetCurrentSongIndex(int index)
 		currentSongIndex = 0;
 	}
 }
+
+Song * Playlist::GetNextSong()
+{
+	if (songs->size() == 0) {
+		return NULL;
+	}
+	currentSongIndex = (currentSongIndex + 1) % songs->size();
+	return (*songs)[currentSongIndex];
+}

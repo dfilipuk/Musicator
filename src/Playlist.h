@@ -19,5 +19,6 @@ public:
 	Song* GetSongByIndex(int index);
 	int GetCurrentSongIndex();
 	void SetCurrentSongIndex(int index);
+	Song* GetNextSong();
 };
 
