@@ -4,26 +4,25 @@
 
 bool Playlist::IsIndexValid(int index)
 {
-	return ((index >= 0) || (index < songs->size()));
+	return ((index >= 0) || (index < songs.size()));
 }
 
-Playlist::Playlist() : currentSongIndex(0)
+Playlist::Playlist()
 {
-	songs = new std::vector<Song *>();
+	currentSongIndex = 0;
 }
 
 
 Playlist::~Playlist()
 {
-	for (auto iterator = songs->begin(); iterator != songs->end(); iterator++) {
+	for (auto iterator = songs.begin(); iterator != songs.end(); iterator++) {
 		delete (*iterator);
 	}
-	delete songs;
 }
 
 bool Playlist::IsSongAlreadyExists(char * filePath)
 {
-	for (auto iterator = songs->begin(); iterator != songs->end(); iterator++) {
+	for (auto iterator = songs.begin(); iterator != songs.end(); iterator++) {
 		if (strcmp((*iterator)->GetFilePath(), filePath) == 0) {
 			return true;
 		}
@@ -33,15 +32,15 @@ bool Playlist::IsSongAlreadyExists(char * filePath)
 
 void Playlist::AddSong(Song * newSong)
 {
-	songs->push_back(newSong);
+	songs.push_back(newSong);
 }
 
 void Playlist::RemoveSongByIndex(int index)
 {
 	if (IsIndexValid(index)) {
-		auto removingItemPosition = songs->begin() + index;
+		auto removingItemPosition = songs.begin() + index;
 		Song *removingItem = *removingItemPosition;
-		songs->erase(removingItemPosition);
+		songs.erase(removingItemPosition);
 		delete removingItem;
 		if (index == currentSongIndex) {
 			currentSongIndex = 0;
@@ -57,7 +56,7 @@ Song * Playlist::GetSongByIndex(int index)
 	if (!IsIndexValid(index)) {
 		return NULL;
 	}
-	return (*songs)[index];
+	return songs[index];
 }
 
 int Playlist::GetCurrentSongIndex()
@@ -77,9 +76,9 @@ void Playlist::SetCurrentSongIndex(int index)
 
 Song * Playlist::GetNextSong()
 {
-	if (songs->size() == 0) {
+	if (songs.size() == 0) {
 		return NULL;
 	}
-	currentSongIndex = (currentSongIndex + 1) % songs->size();
-	return (*songs)[currentSongIndex];
+	currentSongIndex = (currentSongIndex + 1) % songs.size();
+	return songs[currentSongIndex];
 }

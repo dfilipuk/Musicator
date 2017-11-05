@@ -6,7 +6,7 @@
 class Playlist
 {
 private:
-	std::vector<Song *> *songs;
+	std::vector<Song *> songs;
 	int currentSongIndex;
 
 	bool IsIndexValid(int index);
