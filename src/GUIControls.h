@@ -15,13 +15,19 @@ class GUIControls
 {
 private:
 	HWND hWndBtnBackward, hWndBtnPlay, hWndBtnStop, hWndBtnPause, hWndBtnForward, hWndListView;
+	HFONT font;
 	int lvWidth, lvHeight;
+	char *currentSongName;
+
+	HFONT GetFont();
 public:
 	void SetButtonsState(ButtonsState bs);
 	void CreateControls(HWND hWndParent);
 	void AddElementToListView(char *song, char *length);
 	void DeleteElementFromListView(int index);
 	int GetSelectedListViewItemInd();
+	void SetCurrentSongName(char *songName);
+	void DrawSongName(HDC hDc);
 	GUIControls();
 	virtual ~GUIControls();
 };

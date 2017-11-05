@@ -108,18 +108,24 @@ void StopSongAction(HWND hWnd)
 	StopPlayingSong(player);
 	controls->SetButtonsState(bsStopped);
 	spectrumVizualizer->DrawZeroSpectrum(hWnd, SPECTRUM_X, SPECTRUM_Y);
+	controls->SetCurrentSongName(NULL);
 }
 
 void RemoveSongAction(HWND hWnd)
 {
 	int selectedSongIndex = controls->GetSelectedListViewItemInd();
+	bool needRepaint = false;
 	while (selectedSongIndex != -1) {
 		controls->DeleteElementFromListView(selectedSongIndex);
 		if (selectedSongIndex == playlist->GetCurrentSongIndex()) {
 			StopSongAction(hWnd);
+			needRepaint = true;
 		}
 		playlist->RemoveSongByIndex(selectedSongIndex);
 		selectedSongIndex = controls->GetSelectedListViewItemInd();
+	}
+	if (needRepaint) {
+		InvalidateRect(hWnd, NULL, true);
 	}
 }
 
@@ -192,6 +198,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			HDC dc;
 			dc = BeginPaint(hWnd, &p);
 			UpdateSpectrum(NULL, false);
+			controls->DrawSongName(dc);
 			EndPaint(hWnd, &p);
 		}
 		break;
@@ -216,12 +223,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case BTN_STOP_ID:
 			StopSongAction(hWnd);
+			InvalidateRect(hWnd, NULL, true);
 			break;
 		case BTN_PAUSE_ID:
 			player->PauseSong();
 			controls->SetButtonsState(bsPaused);
 			StopSpectrumTimer();
-			InvalidateRect(hWnd, NULL, true);
+			InvalidateRect(hWnd, NULL, false);
 			break;
 		case BTN_FORWARD_ID:
 			player->RunForward();
@@ -241,6 +249,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				playlist->SetCurrentSongIndex(selectedSongIndex);
 				StartPlayingNewSong(selectedSong->GetFilePath(), player);
 				controls->SetButtonsState(bsPlaying);
+				controls->SetCurrentSongName(selectedSong->GetFileName());
+				InvalidateRect(hWnd, NULL, true);
 			}
 		}
 		SetFocus(hWnd);
@@ -273,7 +283,12 @@ void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 			if (nextSong != NULL) {
 				StartPlayingNewSong(nextSong->GetFilePath(), player);
 				controls->SetButtonsState(bsPlaying);
+				controls->SetCurrentSongName(nextSong->GetFileName());
 			}
+			else {
+				controls->SetCurrentSongName(NULL);
+			}
+			InvalidateRect(hMainWnd, NULL, true);
 		}
 	}
 	else {

@@ -18,14 +18,43 @@
 #define LVC_SONG_TITLE "Song"
 #define LVC_SONG_IND 0
 #define LVC_SONGLENGTH_IND 1
+#define FONT_NAME "Arial"
+#define FONT_WEIGHT 16
+#define SONG_NAME_X 40
+#define SONG_NAME_Y 280
+#define SONG_NAME_WIDTH 400
+#define SONG_NAME_HEIGHT 20
 
 GUIControls::GUIControls() : lvHeight(0), lvWidth(0)
 {
+	font = GetFont();
+	currentSongName = NULL;
 }
 
 
 GUIControls::~GUIControls()
 {
+	DeleteObject(font);
+}
+
+HFONT GUIControls::GetFont()
+{
+	LOGFONT logFont;
+	logFont.lfWidth = 0;
+	logFont.lfHeight = FONT_WEIGHT;
+	logFont.lfEscapement = 0;
+	logFont.lfOrientation = 0;
+	logFont.lfWeight = FW_NORMAL;
+	logFont.lfItalic = false;
+	logFont.lfStrikeOut = false;
+	logFont.lfUnderline = false;
+	logFont.lfCharSet = DEFAULT_CHARSET;
+	logFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+	logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+	logFont.lfQuality = DEFAULT_QUALITY;
+	logFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+	strcpy_s(logFont.lfFaceName, strlen(FONT_NAME) + 1, FONT_NAME);
+	return CreateFontIndirect(&logFont);
 }
 
 void GUIControls::SetButtonsState(ButtonsState bs)
@@ -124,5 +153,25 @@ void GUIControls::DeleteElementFromListView(int index)
 int GUIControls::GetSelectedListViewItemInd()
 {
 	return ListView_GetNextItem(hWndListView, -1, LVNI_ALL | LVNI_SELECTED);
+}
+
+void GUIControls::SetCurrentSongName(char * songName)
+{
+	currentSongName = songName;
+}
+
+void GUIControls::DrawSongName(HDC hDc)
+{
+	char *text = currentSongName == NULL ? "" : currentSongName;
+	RECT textRect;
+	HGDIOBJ oldFont = SelectObject(hDc, font);
+	int oldMode = SetBkMode(hDc, TRANSPARENT);
+	textRect.top = SONG_NAME_Y;
+	textRect.left = SONG_NAME_X;
+	textRect.bottom = textRect.top + SONG_NAME_HEIGHT;
+	textRect.right = textRect.left + SONG_NAME_WIDTH;
+	DrawText(hDc, text, -1, &textRect, DT_CENTER | DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX);
+	SelectObject(hDc, oldFont);
+	SetBkMode(hDc, oldMode);
 }
 
