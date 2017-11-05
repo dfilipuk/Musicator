@@ -247,9 +247,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Song *selectedSong = playlist->GetSongByIndex(selectedSongIndex);
 			if (selectedSong != NULL) {
 				playlist->SetCurrentSongIndex(selectedSongIndex);
-				StartPlayingNewSong(selectedSong->GetFilePath(), player);
-				controls->SetButtonsState(bsPlaying);
-				controls->SetCurrentSongName(selectedSong->GetFileName());
+				if (StartPlayingNewSong(selectedSong->GetFilePath(), player)) {
+					controls->SetButtonsState(bsPlaying);
+					controls->SetCurrentSongName(selectedSong->GetFileName());
+				}
+				else {
+					controls->SetButtonsState(bsStopped);
+					controls->SetCurrentSongName(NULL);
+					ShowError(hWnd, "Unable to play song!");
+				}
 				InvalidateRect(hWnd, NULL, true);
 			}
 		}
@@ -278,15 +284,17 @@ void CALLBACK UpdateSpectrum(PVOID lpParametr, BOOLEAN TimerOrWaitFired)
 		bool isStopped = !spectrumVizualizer->DrawSpectrum(hMainWnd, SPECTRUM_X, SPECTRUM_Y, player->GetCurrentStreamHandler());
 		if (isStopped) {
 			StopPlayingSong(player);
+			controls->SetCurrentSongName(NULL);
 			controls->SetButtonsState(bsStopped);
 			Song *nextSong = playlist->GetNextSong();
 			if (nextSong != NULL) {
-				StartPlayingNewSong(nextSong->GetFilePath(), player);
-				controls->SetButtonsState(bsPlaying);
-				controls->SetCurrentSongName(nextSong->GetFileName());
-			}
-			else {
-				controls->SetCurrentSongName(NULL);
+				if (StartPlayingNewSong(nextSong->GetFilePath(), player)) {
+					controls->SetButtonsState(bsPlaying);
+					controls->SetCurrentSongName(nextSong->GetFileName());
+				}
+				else {
+					ShowError(hMainWnd, "Unable to play song!");
+				}
 			}
 			InvalidateRect(hMainWnd, NULL, true);
 		}
