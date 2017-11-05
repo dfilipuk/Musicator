@@ -22,7 +22,7 @@ SpectrumVisualiser::SpectrumVisualiser(HWND hWnd, int height, int barWidth, int 
 
 SpectrumVisualiser::~SpectrumVisualiser()
 {
-	delete bitmapInfoBuffer;
+	delete [] bitmapInfoBuffer;
 	SelectObject(hSpectrumDC, hSpectrumInitialBitmap);
 	DeleteDC(hSpectrumDC);
 	DeleteObject(hSpectrumBitmap);
@@ -137,7 +137,7 @@ bool SpectrumVisualiser::DrawSpectrum(HWND hWnd, int x, int y, DWORD channel)
 		DrawZeroSpectrum(hWnd, x, y);
 	}
 
-	delete fft;
+	delete [] fft;
 	return result;
 }
 

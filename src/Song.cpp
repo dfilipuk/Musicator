@@ -54,10 +54,10 @@ Song::Song(char *filePath, int length)
 
 Song::~Song()
 {
-	delete filePath;
-	delete formattedTime;
+	delete [] filePath;
+	delete [] formattedTime;
 	if (fileName != NULL) {
-		delete fileName;
+		delete [] fileName;
 	}
 }
 

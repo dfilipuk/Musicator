@@ -30,7 +30,7 @@ char * OpenFileDialog::GetFilename(HWND hWnd)
 		return file;
 	}
 	else {
-		delete file;
+		delete [] file;
 		return NULL;
 	}
 }

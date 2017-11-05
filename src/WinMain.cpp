@@ -87,14 +87,14 @@ void AddSongAction(HWND hWnd)
 	}
 
 	if (playlist->IsSongAlreadyExists(file)) {
-		delete file;
+		delete [] file;
 		return;
 	}
 
 	int songLengthInSeconds = player->GetSongLengthInSeconds(file);
 	if (songLengthInSeconds < 0) {
 		ShowError(hWnd, "Unable to open file!");
-		delete file;
+		delete [] file;
 		return;
 	}
 
