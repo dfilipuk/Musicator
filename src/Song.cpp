@@ -8,7 +8,7 @@
 #define MINUTES_IN_HOUR 60
 #define FORMATTED_TIME_STRING_LENGTH 8
 
-char * Song::GetFileName(char * filePath)
+char * Song::GetFileNameFromPath(char * filePath)
 {
 	int pathLength = strlen(filePath);
 	int backSlashIndex = pathLength;
@@ -47,7 +47,7 @@ char * Song::GetFormattedTime(int length)
 Song::Song(char *filePath, int length)
 {
 	this->filePath = filePath;
-	fileName = GetFileName(filePath);
+	fileName = GetFileNameFromPath(filePath);
 	formattedTime = GetFormattedTime(length);
 }
 

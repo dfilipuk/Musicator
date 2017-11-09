@@ -23,7 +23,7 @@
 #define SONG_NAME_X 40
 #define SONG_NAME_Y 280
 #define SONG_NAME_WIDTH 400
-#define SONG_NAME_HEIGHT 20
+#define SONG_NAME_HEIGHT 18
 
 GUIControls::GUIControls() : lvHeight(0), lvWidth(0)
 {
