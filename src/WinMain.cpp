@@ -229,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			player->PauseSong();
 			controls->SetButtonsState(bsPaused);
 			StopSpectrumTimer();
-			InvalidateRect(hWnd, NULL, false);
+			InvalidateRect(hWnd, NULL, true);
 			break;
 		case BTN_FORWARD_ID:
 			player->RunForward();
