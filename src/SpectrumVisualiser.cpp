@@ -13,6 +13,11 @@ SpectrumVisualiser::SpectrumVisualiser(HWND hWnd, int height, int barWidth, int 
 	
 	scaleCoefficient = spectrumHeightPx / LOGICAL_SPECTRUM_HEIGHT;
 	unusedHeight = spectrumHeightPx % LOGICAL_SPECTRUM_HEIGHT;
+
+	if (scaleCoefficient == 0) {
+		scaleCoefficient = 1;
+		unusedHeight = unusedHeight - LOGICAL_SPECTRUM_HEIGHT;
+	}
 	
 	bitmapInfoBuffer = new BYTE[sizeof(BITMAPINFOHEADER) + COLORS_AMOUNT_IN_PALETTE * sizeof(RGBQUAD)];
 	bitmapInfoHeader = (BITMAPINFOHEADER *)bitmapInfoBuffer;
